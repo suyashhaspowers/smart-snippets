@@ -6,11 +6,11 @@ CREATE TABLE snippet (
 );
 
 CREATE TABLE ss_user (
-    user_id SERIAL PRIMARY KEY
+    user_id TEXT PRIMARY KEY
 );
 
 -- relationship tables
 CREATE TABLE user_snippet (
     snippet_id SERIAL REFERENCES snippet (snippet_id),
-    user_id SERIAL REFERENCES ss_user (user_id)
+    user_id TEXT REFERENCES ss_user (user_id)
 );

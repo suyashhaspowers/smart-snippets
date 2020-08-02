@@ -1,3 +1,5 @@
-server/openai-credentials.txt
+server/src/openai-credentials.txt
 
 *.ipynb
+
+server/src/__pycache__/
