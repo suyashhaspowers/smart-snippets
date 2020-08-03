@@ -3,3 +3,5 @@ server/src/openai-credentials.txt
 *.ipynb
 
 server/src/__pycache__/
+
+client/node_modules
