@@ -65,7 +65,7 @@ class Cursor:
         """
         self.crs.execute(query)
 
-        cols = self.get_cols()
+        cols = self._get_cols()
 
         result = self.crs.fetchall()
 
@@ -95,9 +95,14 @@ class QueryPipeline:
         openai.api_key = self.api_key
 
         # set query parameters
-        engine = kwargs['engine'] if 'engine' in kwargs else 'davinci-msft'
-        temperature = kwargs['temperature'] if 'temperature' in kwargs else 0.5
-        num_tokens = kwargs['num_tokens'] if 'num_tokens' in kwargs else 10
+        self.engine = \
+            kwargs['engine'] if 'engine' in kwargs else 'davinci-msft'
+        self.temperature = \
+            kwargs['temperature'] if 'temperature' in kwargs else 0.5
+        self.num_tokens = \
+            kwargs['num_tokens'] if 'num_tokens' in kwargs else 100
+        self.stop_seq = \
+            kwargs['stop_sequence'] if 'stop_sequence' in kwargs else '\nQuery:'
 
         # initialize prompt
         self._initialize_prompt()
@@ -122,6 +127,7 @@ class QueryPipeline:
             Parameters
             ----------
         """
+
         self.prompt = "Once upon a time"
 
     def build_prompt(self, input):
@@ -143,20 +149,26 @@ class QueryPipeline:
         """
         if not isinstance(input, dict) or len(input) == 0:
             return False
-        
+
         user_id = input['user_id']
 
         text = input['text']
 
+        added_prompt = f"\nQuery: {text}"
+        added_prompt += "\nResult:"
+        added_prompt += "\n"
+        
+
         # query for existing examples from user
         sql_query = f"""
-            SELECT snippet_id FROM user_snippet WHERE user_id = {user_id}
+            SELECT snippet_id FROM user_snippet WHERE user_id = '{user_id}'
         """
         
         snippet_list = self.cursor.fetch_dict(sql_query)
 
         if len(snippet_list) == 0:
             # no previously generated examples from user
+            self.prompt += added_prompt
             return True
         
         # use existing examples and further build the prompt
@@ -164,25 +176,23 @@ class QueryPipeline:
             SELECT snippet.query, snippet.generated_snippet
             FROM snippet
             INNER JOIN on snippet.snippet_id = user_snippet.snippet_id
-            WHERE user_snippet.user_id = {user_id}
+            WHERE user_snippet.user_id = '{user_id}'
         """
 
         example_list = self.cursor.fetch_dict(sql_query)
         
-        if len(example_list) == 0:
-            # checking again if there are existing examples
-            return True
-        elif len(example_list) >= 5:
+        if len(example_list) >= 5:
             # use the user-examples as the only ones for the final prompt
             self.prompt = ""
 
         for example in example_list:
-            prompt_append = f"""
-            Query: {example['query']}
-            Result:
-            {example['generated_snippet']}"""
-
+            prompt_append = f"\nQuery: {example['query']}"
+            prompt_append += '\nResult:'
+            prompt_append += f"\n{example['generated_snippet']}"
+            
             self.prompt.append(prompt_append)
+        
+        self.prompt += added_prompt
 
         return True
 
@@ -202,7 +212,8 @@ class QueryPipeline:
             engine=self.engine,
             prompt=self.prompt,
             temperature=self.temperature,
-            max_tokens=self.num_tokens
+            max_tokens=self.num_tokens,
+            stop=self.stop_seq
         )
 
         res_dict = res.to_dict()

@@ -1,0 +1,2 @@
+# hit submit query endpoint and pass user prompt
+curl -X POST -H "Content-Type: application/json" --data '{"user_id": "3ajasd343", "query": "A loop from 1 to 5 that prints out hello for every other iteration"}' http://localhost:5000/submit_query

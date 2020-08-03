@@ -24,9 +24,9 @@ sleep 10
 docker exec -it postgres-db bash -c "cd db && psql --username=postgres -w --file=table-create.sql"
 
 # start app server
-docker exec -d server python App/src/app.py
+# docker exec -d server python App/src/app.py
 
 # test all running containers
-sleep 1
+# sleep 1
 
-curl localhost:5000/test_server
+# curl localhost:5000/test_server
