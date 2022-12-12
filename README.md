@@ -5,5 +5,5 @@ Backend for a VSCode extension that uses GPT-3 to help users generate python cod
 Once you've clone the repo, in your terminal run:
 
 ```bash
-flask run
+python flask run
 ```
